@@ -8,7 +8,6 @@ const styles = StyleSheet.create({
     marginLeft:'30%',
     color:'green',
     marginTop:'5%',
-    marginBottom:'10%'
   },
   title: {
     fontSize: 20,

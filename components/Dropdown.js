@@ -17,7 +17,7 @@ import React, { useState } from 'react';
     const renderLabel = () => {
       if (value || isFocus) {
         return (
-          <Text style={[styles.label, isFocus && { color: 'blue' }]}>
+          <Text style={[styles.label, isFocus && { color: 'red' }]}>
             Select Operation
           </Text>
         );

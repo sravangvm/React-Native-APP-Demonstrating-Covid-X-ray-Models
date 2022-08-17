@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Image, View, Text, TextInput } from 'react-native';
+import { Button, Image, View, Text, TextInput, StyleSheet, SafeAreaView, TouchableOpacity} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { fetch, bundleResourceIO, decodeJpeg } from '@tensorflow/tfjs-react-native';
 import * as jpeg from 'jpeg-js'
@@ -7,26 +7,25 @@ const tf = require('@tensorflow/tfjs');
 require('@tensorflow/tfjs');
 
 export default function Classi() {
-  const [image, setImage] = useState(null);
- const [imagelink,setImageLink]=useState(null);
+ const [imagelink,setImageLink]=useState("");
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 1, 
       base64:true,
     });
 
     if (!result.cancelled) {
-      setImage(result.uri);
       setImageLink(result.base64);
     }
   };
 
   const [CovidClassi,setCovidClassi]=useState("");
-  const [result,SetResult]=useState(null);
+  const [result,SetResult]=useState("");
+  const [error,setError]=useState(null);
       useEffect(() => {
         async function loadModel(){
           //Wait for tensorflow module to be ready
@@ -54,7 +53,6 @@ export default function Classi() {
       }
       let imageTensor=tf.tensor3d(buffer, [width, height, 1]);
       imageTensor=imageTensor.resizeBilinear([100,100]).reshape([1,100,100,1])
-       console.log(imageTensor);
       return imageTensor
       }
       
@@ -66,35 +64,103 @@ export default function Classi() {
           const imageTensor = imageToTensor(rawImageData);
          let result = (await CovidClassi.predict(imageTensor).data());
          SetResult(result[0]>result[1]?"Negative":"Positive")
-
         }
         catch(error){
           console.log(error)
+          setError("There is a error");
         }
       };
+      const handleClear=()=>{
+        setImageLink('')
+        SetResult('')
+      }
   return (
     <View style={{ justifyContent: 'center'}}>
-<TextInput
-        style={{height: 40}}
-        placeholder="Give the link to JPEG X-RAY IMAGE"
-        onChangeText={newText => setImageLink(newText)}
-      />
 
-    {{imagelink} &&
-    <View>
-      <Text>
-        Given Image:-
+    <SafeAreaView style={styles.container}>
+        <View style={styles.parent}>
+          <TextInput
+          placeholder='Enter the Link of The Jpeg X-Ray Image'
+            style={styles.textInput}
+            value={imagelink}
+            onChangeText={(value) => setImageLink(value)}
+          />
+          <TouchableOpacity
+            style={styles.closeButtonParent}
+            onPress={handleClear}
+          >
+            <Image
+              style={styles.closeButton}
+              source={require("../assets/closeImg.jpg")}
+            />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+
+    {imagelink!="" &&
+    <View style={{flexDirection:'row', flexWrap:'wrap'}}>
+      <Text style={styles.titles}>
+        Given Image:
       </Text>
-      <Image source={{ uri: imagelink }} style={{ width: 200, height: 200 , justifyContent: 'center' }}
+      <Image source={{ uri: imagelink }} style={styles.img}
    />
     </View>
-    
     }
-      {{imagelink} && <Button title='CLassify' style={{padding:10, marginTop:10}} onPress={getImage} />}
+      {imagelink!="" && <Button title='CLassify' style={styles.button} onPress={getImage} />}
       
-        {result!==null?<Text>Result:-</Text>:<Text></Text>}
-      {{result} && <Text style={{height:100}}> {result} </Text>}
-
+        <View style={{flexDirection:'row', flexWrap:'wrap',alignContent:'center'}}>
+        {imagelink!=="" && result!='' && <Text style={styles.titles}>Result:{result}</Text>}
+        </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "column",
+    justifyContent: "center",
+    marginTop:5,
+  },
+  titles:{
+    fontSize:25,
+    width: '100%',
+    alignItems:'center',
+    marginLeft:'30%',
+    color:'green',
+    marginTop:10
+  },
+  button:{
+    fontSize:25,
+    width: '100%',
+    alignItems:'center',
+    marginLeft:'30%',
+    color:"#841584",
+    marginTop:'5%',
+    marginBottom:'10%'
+  },
+  img:{
+    width: "100%", 
+    height: 300 , 
+    justifyContent: 'center',
+    padding:100,
+  },
+  parent: {
+    marginTop:20,
+    borderColor: "blue",
+    borderRadius: 30,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    height:50,
+    width:"95%",
+  },
+  closeButton: {
+    height: 20,
+    width: 25,
+  },
+  closeButtonParent: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 5,
+  },
+})
